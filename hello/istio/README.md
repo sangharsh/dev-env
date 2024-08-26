@@ -1,6 +1,6 @@
-## Env variable
+# Deploy app with istio routing
 
-export MINIKUBE_PROFILE=hello
+Deploy app and setup istio to route request to app version based on header
 
 ## Setup kubernetes
 
