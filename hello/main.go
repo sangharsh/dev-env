@@ -37,9 +37,6 @@ func main() {
 }
 
 func processUpstreamCall(url string) *UpstreamResponseData {
-	if url == "" {
-		return nil
-	}
 	var upstreamError string
 	var upstreamData interface{}
 	upstreamResp, err := http.Get(url)
@@ -73,10 +70,14 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 		Msg: message,
 	}
 
-	upstreamURL := os.Getenv("UPSTREAM_URL")
-	upstreamResponse := processUpstreamCall(upstreamURL)
-	if upstreamResponse != nil {
-		response.UpstreamResponse = upstreamResponse
+	upstreamHost := os.Getenv("UPSTREAM_HOST")
+
+	if upstreamHost != "" {
+		upstreamURL := "http://" + upstreamHost + "/hello"
+		upstreamResponse := processUpstreamCall(upstreamURL)
+		if upstreamResponse != nil {
+			response.UpstreamResponse = upstreamResponse
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
