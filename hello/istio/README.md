@@ -1,32 +1,38 @@
 ## Env variable
 
 export MINIKUBE_PROFILE=hello
+
 ## Setup kubernetes
+
 ```
 minikube start -p minikube
 minikube tunnel -p minikube
 ```
 
 ## Install istio on k8s
+
 ```
 istioctl install --skip-confirmation
 kubectl label namespace default istio-injection=enabled
 ```
 
 ## Build image
+
 ```
 eval $(minikube docker-env -p minikube)
 docker build -t hello:latest -f hello/Dockerfile hello/
 ```
 
 ## Deploy
+
 ```
-kubectl apply -f hello/istio/hello.yaml
+kubectl apply -f hello/istio/deploy.yaml
 // Access from within a pod
 kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.name}')" -c hello-2 -- wget -q -O- hello-1:8080/hello | jq
 ```
 
 ## Setup networking
+
 ```
 kubectl apply -f hello/istio/gateway.yaml
 
@@ -41,12 +47,14 @@ echo $GATEWAY_URL
 ```
 
 ## Access the app
+
 ```
-curl -sSv -H 'end-user:jason' ${GATEWAY_URL}/hello | jq
+curl -sSv -H 'x-hello-1:v2' ${GATEWAY_URL}/hello | jq
 curl -sSv ${GATEWAY_URL}/hello | jq
 ```
 
 # Clean up
+
 ```
 minikube delete -p minikube
 ```

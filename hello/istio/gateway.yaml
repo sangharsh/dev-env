@@ -41,8 +41,8 @@ spec:
   http:
   - match:
     - headers:
-        end-user:
-          exact: jason
+        x-hello-1:
+          exact: v2
     route:
     - destination:
         host: hello-1
