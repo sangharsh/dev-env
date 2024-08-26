@@ -6,6 +6,8 @@ Deploy app and setup istio to route request to app version based on header
 
 ```
 minikube start -p minikube
+// Run in a separate window
+// Assigns an external IP for LoadBalancer services
 minikube tunnel -p minikube
 ```
 
