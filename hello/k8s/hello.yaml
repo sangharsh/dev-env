@@ -44,7 +44,7 @@ spec:
         - name: MESSAGE
           value: "hello-1"
         - name: UPSTREAM_HOST
-          value: "hello-2"
+          value: "hello-2:8080"
 ---
 ################################################################################
 # Hello 2

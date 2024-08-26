@@ -72,13 +72,12 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 
 	upstreamHost := os.Getenv("UPSTREAM_HOST")
 
-	var upstreamURL string
 	if upstreamHost != "" {
-		upstreamURL = upstreamHost + "/hello"
-	}
-	upstreamResponse := processUpstreamCall(upstreamURL)
-	if upstreamResponse != nil {
-		response.UpstreamResponse = upstreamResponse
+		upstreamURL := "http://" + upstreamHost + "/hello"
+		upstreamResponse := processUpstreamCall(upstreamURL)
+		if upstreamResponse != nil {
+			response.UpstreamResponse = upstreamResponse
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
