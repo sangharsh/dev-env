@@ -14,3 +14,14 @@ Enable multiple developers/teams to deploy their set of services integrated with
 1. Developers should be able to deploy their changed services using an agreed-upon label.
 1. Request with a specific header use services deployed with matching label if exists otherwise baseline service.
    1. Header should be forwarded in S2S (also async, infra?(MQ, DB, SQS) etc.) calls
+
+
+## Checkin
+Done
+1. Hello service
+1. Routing via istio, header based
+
+ToDo
+1. Context propagation
+1. VM, infra pieces, async etc.
+1.

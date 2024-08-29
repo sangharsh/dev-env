@@ -3,11 +3,11 @@
 Run multiple instances of the go app e.g.
 
 ```
-UPSTREAM_URL=http://localhost:8081/hello go run .
+UPSTREAM_HOST=localhost:8081 go run .
 ```
 
 ```
-UPSTREAM_URL=http://localhost:8082/hello PORT=8081 MESSAGE="hello 8081" go run .
+UPSTREAM_HOST=localhost:8082 PORT=8081 MESSAGE="hello 8081" go run .
 ```
 
 ```
