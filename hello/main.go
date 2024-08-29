@@ -1,90 +1,97 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
-	"io"
+	"errors"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/sangharsh/dev-env/hello/hello"
+	"github.com/sangharsh/dev-env/hello/otel_helper"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-type Response struct {
-	Msg              string      `json:"msg"`
-	UpstreamResponse interface{} `json:"response,omitempty"`
-}
-
-type UpstreamResponseData struct {
-	URL           string      `json:"url"`
-	Data          interface{} `json:"data,omitempty"`
-	UpstreamError string      `json:"error,omitempty"`
-}
-
+// Credits: https://opentelemetry.io/docs/languages/go/getting-started/#initialize-the-opentelemetry-sdk
 func main() {
-	fmt.Println("Hello, World!")
-	r := mux.NewRouter()
+	if err := run(); err != nil {
+		log.Fatalln(err)
+	}
+}
 
-	r.HandleFunc("/statusz", handleStatusz)
-	r.HandleFunc("/hello", handleHello)
+func run() (err error) {
+	// Handle SIGINT (CTRL+C) gracefully.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	// Set up OpenTelemetry.
+	otelShutdown, err := otel_helper.SetupOTelSDK(ctx)
+	if err != nil {
+		return
+	}
+	// Handle shutdown properly so nothing leaks.
+	defer func() {
+		err = errors.Join(err, otelShutdown(context.Background()))
+	}()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("Starting http server at port %v", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	// Start HTTP server.
+	srv := &http.Server{
+		Addr:         ":" + port,
+		BaseContext:  func(_ net.Listener) context.Context { return ctx },
+		ReadTimeout:  time.Second,
+		WriteTimeout: 10 * time.Second,
+		Handler:      newHTTPHandler(),
+	}
+	srvErr := make(chan error, 1)
+	go func() {
+		srvErr <- srv.ListenAndServe()
+	}()
+
+	// Wait for interruption.
+	select {
+	case err = <-srvErr:
+		// Error when starting HTTP server.
+		return
+	case <-ctx.Done():
+		// Wait for first CTRL+C.
+		// Stop receiving signal notifications as soon as possible.
+		stop()
+	}
+
+	// When Shutdown is called, ListenAndServe immediately returns ErrServerClosed.
+	err = srv.Shutdown(context.Background())
+	return
 }
 
-func processUpstreamCall(url string) *UpstreamResponseData {
-	var upstreamError string
-	var upstreamData interface{}
-	upstreamResp, err := http.Get(url)
-	if err != nil {
-		upstreamError = fmt.Sprintf("Error fetching upstream data: %v", err)
-	} else {
-		defer upstreamResp.Body.Close()
-		upstreamBody, err := io.ReadAll(upstreamResp.Body)
-		if err != nil {
-			upstreamError = fmt.Sprintf("Error reading upstream response: %v", err)
-		} else {
-			err = json.Unmarshal(upstreamBody, &upstreamData)
-			if err != nil {
-				upstreamError = fmt.Sprintf("Error parsing upstream JSON: %v", err)
-			}
-		}
-	}
-	return &UpstreamResponseData{
-		URL:           url,
-		Data:          upstreamData,
-		UpstreamError: upstreamError,
-	}
-}
+func newHTTPHandler() http.Handler {
+	mux := http.NewServeMux()
 
-func handleHello(w http.ResponseWriter, r *http.Request) {
-	message := "hello"
-	if val, found := os.LookupEnv("MESSAGE"); found {
-		message = val
-	}
-	response := Response{
-		Msg: message,
+	// handleFunc is a replacement for mux.HandleFunc
+	// which enriches the handler's HTTP instrumentation with the pattern as the http.route.
+	handleFunc := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
+		// Configure the "http.route" for the HTTP instrumentation.
+		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
+		mux.Handle(pattern, handler)
 	}
 
-	upstreamHost := os.Getenv("UPSTREAM_HOST")
+	// Register handlers.
+	handleFunc("/statusz", handleStatusz)
+	handleFunc("/hello", hello.HandleHello)
 
-	if upstreamHost != "" {
-		upstreamURL := "http://" + upstreamHost + "/hello"
-		upstreamResponse := processUpstreamCall(upstreamURL)
-		if upstreamResponse != nil {
-			response.UpstreamResponse = upstreamResponse
-		}
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	// Add HTTP instrumentation for the whole server.
+	handler := otelhttp.NewHandler(mux, "/")
+	return handler
 }
 
 func handleStatusz(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Received %s request at %s", r.Method, r.RequestURI)
 	response := map[string]string{
 		"message": "all ok",
 	}
