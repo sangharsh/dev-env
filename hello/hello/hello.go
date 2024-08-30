@@ -32,7 +32,7 @@ type UpstreamResponseData struct {
 }
 
 func processUpstreamCall(ctx context.Context, url string) *UpstreamResponseData {
-	ctx, span := tracer.Start(ctx, "call-another-service")
+	ctx, span := tracer.Start(ctx, "call-upstream")
 	defer span.End()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -69,12 +69,12 @@ func processUpstreamCall(ctx context.Context, url string) *UpstreamResponseData 
 }
 
 func HandleHello(w http.ResponseWriter, r *http.Request) {
-	logger.InfoContext(r.Context(), "handleHello", "X-Hello-1", r.Header.Get("X-Hello-1"))
+	logger.Info("handleHello", "X-Hello-1", r.Header.Get("X-Hello-1"))
 	ctx := r.Context()
 	propagator := otel.GetTextMapPropagator()
 	ctx = propagator.Extract(ctx, propagation.HeaderCarrier(r.Header))
 
-	ctx, span := tracer.Start(ctx, "handle-request")
+	ctx, span := tracer.Start(ctx, "handle-hello")
 	defer span.End()
 
 	message := "hello"
