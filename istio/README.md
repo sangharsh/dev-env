@@ -36,7 +36,7 @@ kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.
 ## Setup networking
 
 ```
-kubectl apply -f hello/istio/gateway.yaml
+kubectl apply -f istio/gateway.yaml
 
 // Get Gateway URL
 export INGRESS_NAME=istio-ingressgateway
@@ -51,8 +51,27 @@ echo $GATEWAY_URL
 ## Access the app
 
 ```
-curl -sSv -H 'x-hello-1:v2' ${GATEWAY_URL}/hello | jq
+curl -sSv -H 'X-Hello-1:v2' ${GATEWAY_URL}/hello | jq
 curl -sSv ${GATEWAY_URL}/hello | jq
+```
+Test
+```
+for h1v in v1 v2; do for h2v in v1 v2; do curl -sS -H "X-Hello-1:$h1v" -H "X-Hello-2:$h2v" ${GATEWAY_URL}/hello; done; done
+```
+
+## Telemetry
+
+Logs from app container
+
+```
+kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.items[0].metadata.name}')" -c hello-2
+```
+
+Access logs from envoy sidecard
+
+```
+kubectl apply -f istio/telemetry.yaml
+kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.items[0].metadata.name}')" -c istio-proxy
 ```
 
 # Clean up
