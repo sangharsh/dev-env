@@ -26,15 +26,16 @@ type Response struct {
 }
 
 type UpstreamResponseData struct {
-	URL           string      `json:"url"`
+	Host          string      `json:"host"`
 	Data          interface{} `json:"data,omitempty"`
 	UpstreamError string      `json:"error,omitempty"`
 }
 
-func processUpstreamCall(ctx context.Context, url string) *UpstreamResponseData {
-	ctx, span := tracer.Start(ctx, "call-upstream")
+func callHello(ctx context.Context, host string) *UpstreamResponseData {
+	ctx, span := tracer.Start(ctx, "call-hello")
 	defer span.End()
 
+	url := "http://" + host + "/hello"
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	propagator := otel.GetTextMapPropagator()
 	propagator.Inject(ctx, propagation.HeaderCarrier(req.Header))
@@ -62,7 +63,7 @@ func processUpstreamCall(ctx context.Context, url string) *UpstreamResponseData 
 		}
 	}
 	return &UpstreamResponseData{
-		URL:           url,
+		Host:          host,
 		Data:          upstreamData,
 		UpstreamError: upstreamError,
 	}
@@ -88,8 +89,7 @@ func HandleHello(w http.ResponseWriter, r *http.Request) {
 	upstreamHost := os.Getenv("UPSTREAM_HOST")
 
 	if upstreamHost != "" {
-		upstreamURL := "http://" + upstreamHost + "/hello"
-		upstreamResponse := processUpstreamCall(ctx, upstreamURL)
+		upstreamResponse := callHello(ctx, upstreamHost)
 		if upstreamResponse != nil {
 			response.UpstreamResponse = upstreamResponse
 		}
