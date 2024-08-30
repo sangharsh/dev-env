@@ -51,8 +51,6 @@ func SetupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 
 func newPropagator() propagation.TextMapPropagator {
 	return propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
 		CustomHeaderPropagator{},
 	)
 }
