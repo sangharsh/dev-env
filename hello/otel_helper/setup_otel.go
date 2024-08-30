@@ -3,15 +3,12 @@ package otel_helper
 import (
 	"context"
 	"errors"
-	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/log"
-	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 // SetupOTelSDK bootstraps the OpenTelemetry pipeline.
@@ -40,15 +37,6 @@ func SetupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 	prop := newPropagator()
 	otel.SetTextMapPropagator(prop)
 
-	// Set up trace provider.
-	tracerProvider, err := newTraceProvider()
-	if err != nil {
-		handleErr(err)
-		return
-	}
-	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
-	otel.SetTracerProvider(tracerProvider)
-
 	// Set up logger provider.
 	loggerProvider, err := newLoggerProvider()
 	if err != nil {
@@ -67,21 +55,6 @@ func newPropagator() propagation.TextMapPropagator {
 		propagation.Baggage{},
 		CustomHeaderPropagator{},
 	)
-}
-
-func newTraceProvider() (*trace.TracerProvider, error) {
-	traceExporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint())
-	if err != nil {
-		return nil, err
-	}
-
-	traceProvider := trace.NewTracerProvider(
-		trace.WithBatcher(traceExporter,
-			// Default is 5s. Set to 1s for demonstrative purposes.
-			trace.WithBatchTimeout(time.Second)),
-	)
-	return traceProvider, nil
 }
 
 func newLoggerProvider() (*log.LoggerProvider, error) {
