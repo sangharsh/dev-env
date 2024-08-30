@@ -6,28 +6,34 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 )
 
-const customHeaderName = "X-Hello-1"
+// type CustomHeaderKey string
+var customHeaders = [...]string{"X-Hello-1", "X-Hello-2"}
 
 // CustomHeaderPropagator implements custom header propagation
 type CustomHeaderPropagator struct{}
 
 // Inject sets the custom header into the carrier
 func (chp CustomHeaderPropagator) Inject(ctx context.Context, carrier propagation.TextMapCarrier) {
-	if customValue := ctx.Value(customHeaderName); customValue != nil {
-		carrier.Set(customHeaderName, customValue.(string))
+	for _, header := range customHeaders {
+		if customValue := ctx.Value(header); customValue != nil {
+			carrier.Set(header, customValue.(string))
+
+		}
 	}
 }
 
 // Extract reads the custom header from the carrier and adds it to the context
 func (chp CustomHeaderPropagator) Extract(ctx context.Context, carrier propagation.TextMapCarrier) context.Context {
-	customValue := carrier.Get(customHeaderName)
-	if customValue != "" {
-		ctx = context.WithValue(ctx, customHeaderName, customValue)
+	for _, header := range customHeaders {
+		customValue := carrier.Get(header)
+		if customValue != "" {
+			ctx = context.WithValue(ctx, header, customValue)
+		}
 	}
 	return ctx
 }
 
 // Fields returns the keys whose values are set with Inject.
 func (chp CustomHeaderPropagator) Fields() []string {
-	return []string{customHeaderName}
+	return customHeaders[:]
 }
