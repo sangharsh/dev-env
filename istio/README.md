@@ -28,7 +28,7 @@ docker build -t hello:latest -f hello/Dockerfile hello/
 ## Deploy
 
 ```
-kubectl apply -f hello/istio/deployments.yaml
+kubectl apply -f istio/deployments.yaml
 // Access from within a pod
 kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.name}')" -c hello-2 -- wget -q -O- hello-1:8080/hello | jq
 ```
