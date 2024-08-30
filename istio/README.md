@@ -56,7 +56,7 @@ curl -sSv ${GATEWAY_URL}/hello | jq
 ```
 Test
 ```
-for h1v in v1 v2; do for h2v in v1 v2; do curl -sS -H "X-Hello-1:$h1v" -H "X-Hello-2:$h2v" ${GATEWAY_URL}/hello; done; done
+for h1 in v1 v2; do for h2 in v1 v2; do curl -sS -H "X-Hello-1:${h1}" -H "X-Hello-2:${h2}" ${GATEWAY_URL}/hello; done; done
 ```
 
 ## Telemetry
