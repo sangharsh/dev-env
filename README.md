@@ -21,9 +21,8 @@ Done
 
 1. Hello service
 1. Routing via istio, header based
+1. Context propagation
 
 ToDo
 
-1. Context propagation
 1. VM, infra pieces, async etc.
-1.
