@@ -1,23 +1,13 @@
 package hello
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"log"
 	"net/http"
 	"os"
 
-	"go.opentelemetry.io/contrib/bridges/otelslog"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-)
-
-const name = "github.com/sangharsh/dev-env/hello"
-
-var (
-	tracer = otel.Tracer(name)
-	logger = otelslog.NewLogger(name)
+	"github.com/sangharsh/dev-env/hello/utils"
 )
 
 type Response struct {
@@ -31,69 +21,36 @@ type UpstreamResponseData struct {
 	UpstreamError string      `json:"error,omitempty"`
 }
 
-func callHello(ctx context.Context, host string) *UpstreamResponseData {
-	ctx, span := tracer.Start(ctx, "call-hello")
-	defer span.End()
-
-	url := "http://" + host + "/hello"
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	propagator := otel.GetTextMapPropagator()
-	propagator.Inject(ctx, propagation.HeaderCarrier(req.Header))
-
+func helloUpstream(inRequest *http.Request, host string) *UpstreamResponseData {
+	upstreamResponse := &UpstreamResponseData{
+		Host: host,
+	}
+	url := fmt.Sprintf("http://%s/hello", host)
+	responseJSON, err := utils.FetchJSONResponse(inRequest, url)
 	if err != nil {
-		logger.Info("Error while creating new request", "err", err)
+		upstreamResponse.UpstreamError = err.Error()
 	} else {
-		logger.Info("New Request", "headers", req.Header)
+		upstreamResponse.Data = responseJSON
 	}
-	upstreamResp, err := http.DefaultClient.Do(req)
-	var upstreamError string
-	var upstreamData interface{}
-	if err != nil {
-		upstreamError = fmt.Sprintf("Error fetching upstream data: %v", err)
-	} else {
-		defer upstreamResp.Body.Close()
-		upstreamBody, err := io.ReadAll(upstreamResp.Body)
-		if err != nil {
-			upstreamError = fmt.Sprintf("Error reading upstream response: %v", err)
-		} else {
-			err = json.Unmarshal(upstreamBody, &upstreamData)
-			if err != nil {
-				upstreamError = fmt.Sprintf("Error parsing upstream JSON: %v", err)
-			}
-		}
-	}
-	return &UpstreamResponseData{
-		Host:          host,
-		Data:          upstreamData,
-		UpstreamError: upstreamError,
-	}
+	return upstreamResponse
 }
 
 func HandleHello(w http.ResponseWriter, r *http.Request) {
-	logger.Info("handleHello", "X-Hello-1", r.Header.Get("X-Hello-1"))
-	ctx := r.Context()
-	propagator := otel.GetTextMapPropagator()
-	ctx = propagator.Extract(ctx, propagation.HeaderCarrier(r.Header))
+	log.Printf("handleHello headers: %v", r.Header)
 
-	ctx, span := tracer.Start(ctx, "handle-hello")
-	defer span.End()
+	var response Response
 
-	message := "hello"
-	if val, found := os.LookupEnv("MESSAGE"); found {
-		message = val
+	message := os.Getenv("MESSAGE")
+	if message == "" {
+		message = "hello"
 	}
-	response := Response{
-		Msg: message,
-	}
+	response.Msg = message
 
 	upstreamHost := os.Getenv("UPSTREAM_HOST")
-
 	if upstreamHost != "" {
-		upstreamResponse := callHello(ctx, upstreamHost)
-		if upstreamResponse != nil {
-			response.UpstreamResponse = upstreamResponse
-		}
+		response.UpstreamResponse = helloUpstream(r, upstreamHost)
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
