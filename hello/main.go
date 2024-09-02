@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/sangharsh/dev-env/hello/hello"
 	"github.com/sangharsh/dev-env/hello/otel_helper"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // Credits: https://opentelemetry.io/docs/languages/go/getting-started/#initialize-the-opentelemetry-sdk
@@ -29,14 +27,7 @@ func run() (err error) {
 	defer stop()
 
 	// Set up OpenTelemetry.
-	otelShutdown, err := otel_helper.SetupOTelSDK(ctx)
-	if err != nil {
-		return
-	}
-	// Handle shutdown properly so nothing leaks.
-	defer func() {
-		err = errors.Join(err, otelShutdown(context.Background()))
-	}()
+	otel_helper.SetupOTelSDK()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -48,7 +39,7 @@ func run() (err error) {
 		BaseContext:  func(_ net.Listener) context.Context { return ctx },
 		ReadTimeout:  time.Second,
 		WriteTimeout: 10 * time.Second,
-		Handler:      newHTTPHandler(),
+		Handler:      createHTTPHandler(),
 	}
 	srvErr := make(chan error, 1)
 	go func() {
@@ -71,24 +62,11 @@ func run() (err error) {
 	return
 }
 
-func newHTTPHandler() http.Handler {
+func createHTTPHandler() http.Handler {
 	mux := http.NewServeMux()
-
-	// handleFunc is a replacement for mux.HandleFunc
-	// which enriches the handler's HTTP instrumentation with the pattern as the http.route.
-	handleFunc := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
-		// Configure the "http.route" for the HTTP instrumentation.
-		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
-		mux.Handle(pattern, handler)
-	}
-
-	// Register handlers.
-	handleFunc("/statusz", handleStatusz)
-	handleFunc("/hello", hello.HandleHello)
-
-	// Add HTTP instrumentation for the whole server.
-	handler := otelhttp.NewHandler(mux, "/")
-	return handler
+	mux.HandleFunc("/statusz", handleStatusz)
+	mux.HandleFunc("/hello", hello.HandleHello)
+	return mux
 }
 
 func handleStatusz(w http.ResponseWriter, r *http.Request) {
