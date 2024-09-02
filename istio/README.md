@@ -28,7 +28,7 @@ docker build -t hello:latest -f hello/Dockerfile hello/
 ## Deploy
 
 ```
-kubectl apply -f hello/istio/deployments.yaml
+kubectl apply -f istio/deployments.yaml
 // Access from within a pod
 kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.name}')" -c hello-2 -- wget -q -O- hello-1:8080/hello | jq
 ```
@@ -36,12 +36,11 @@ kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.
 ## Setup networking
 
 ```
-kubectl apply -f hello/istio/gateway.yaml
+kubectl apply -f istio/gateway.yaml
 
 // Get Gateway URL
 export INGRESS_NAME=istio-ingressgateway
 export INGRESS_NS=istio-system
-// kubectl get svc "$INGRESS_NAME" -n "$INGRESS_NS"
 export INGRESS_HOST=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 export INGRESS_PORT=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
 export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT
@@ -51,8 +50,24 @@ echo $GATEWAY_URL
 ## Access the app
 
 ```
-curl -sSv -H 'x-hello-1:v2' ${GATEWAY_URL}/hello | jq
-curl -sSv ${GATEWAY_URL}/hello | jq
+curl -sS -H 'X-Hello-1:v2' -H 'X-Hello-2:v2' ${GATEWAY_URL}/hello | jq
+// Test
+for h1 in v1 v2; do for h2 in v1 v2; do curl -sS -H "X-Hello-1:${h1}" -H "X-Hello-2:${h2}" ${GATEWAY_URL}/hello; done; done
+```
+
+## Telemetry
+
+Logs from app container
+
+```
+kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.items[0].metadata.name}')" -c hello-2
+```
+
+Access logs from envoy sidecard
+
+```
+kubectl apply -f istio/telemetry.yaml
+kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.items[0].metadata.name}')" -c istio-proxy
 ```
 
 # Clean up
