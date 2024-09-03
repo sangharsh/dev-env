@@ -10,8 +10,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/sangharsh/dev-env/hello/context_propagation"
 	"github.com/sangharsh/dev-env/hello/hello"
-	"github.com/sangharsh/dev-env/hello/otel_helper"
 )
 
 // Credits: https://opentelemetry.io/docs/languages/go/getting-started/#initialize-the-opentelemetry-sdk
@@ -27,7 +27,7 @@ func run() (err error) {
 	defer stop()
 
 	// Set up OpenTelemetry.
-	otel_helper.SetupOTelSDK()
+	context_propagation.SetupOTelSDK()
 
 	port := os.Getenv("PORT")
 	if port == "" {
