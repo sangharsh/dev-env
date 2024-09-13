@@ -25,4 +25,8 @@ Done
 
 ToDo
 
+1. Context propagation should be supported by third party services as well. HTTP Baggage is intended for this.
+   1. Single header like "overrides"
+1. Network layer should be able to parse baggage to act on it. User should be able to create baggage to send request
+1. Add languages. Python, node, Java
 1. VM, infra pieces, async etc.
