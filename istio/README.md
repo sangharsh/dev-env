@@ -66,7 +66,9 @@ curl -sS -H 'X-Hello-1:v2' -H 'X-Hello-2:v2' ${GATEWAY_URL}/hello | jq
 ```
 Test all combinations
 ```
-for h1 in v1 v2; do for h2 in v1 v2; do curl -sS -H "X-Hello-1:${h1}" -H "X-Hello-2:${h2}" ${GATEWAY_URL}/hello; done; done
+for h1 in v1 v2; do for h2 in v1 v2; do \
+curl -sS -H "baggage: overrides=hello-1:${h1}hello-2:${h2}" ${GATEWAY_URL}/hello; \
+done; done
 ```
 
 ### Telemetry

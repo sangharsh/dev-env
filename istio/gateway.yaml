@@ -41,8 +41,8 @@ spec:
   http:
   - match:
     - headers:
-        x-hello-1:
-          exact: v2
+        baggage:
+          regex: ".*hello-1:v2.*"
     route:
     - destination:
         host: hello-1
@@ -76,8 +76,8 @@ spec:
   http:
   - match:
     - headers:
-        x-hello-2:
-          exact: v2
+        baggage:
+          regex: ".*hello-2:v2.*"
     route:
     - destination:
         host: hello-2
