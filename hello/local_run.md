@@ -1,4 +1,8 @@
-## Run
+Note: Routing to different versions of app happens with istio.
+This local run is without kubernetes and istio.
+Hence, header based routing does not happen in this setup
+
+## Run locally
 
 Run multiple instances of the go app e.g.
 
@@ -17,5 +21,5 @@ PORT=8082 go run .
 ## Call service
 
 ```
-curl --silent localhost:8080/hello | jq
+curl -sS localhost:8080/hello | jq
 ```
