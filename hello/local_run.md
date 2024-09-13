@@ -27,5 +27,5 @@ PORT=8082 air
 ## Call service
 
 ```
-curl -sS localhost:8080/hello | jq
+curl -sS -H 'X-Hello-1:v2' -H "baggage: userId=alice,serverNode=DF%2028,isProduction=false" localhost:8080/hello | jq
 ```
