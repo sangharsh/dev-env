@@ -13,6 +13,8 @@ func SetupOTelSDK() {
 
 func newPropagator() propagation.TextMapPropagator {
 	return propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
 		CustomHeaderPropagator{},
 	)
 }
