@@ -9,7 +9,7 @@ webhooks:
       matchExpressions:
         - key: runlevel
           operator: NotIn
-          values: ["0","1"]
+          values: ["0", "1"]
         - key: kubernetes.io/metadata.name
           operator: NotIn
           values: ["devenv"]
@@ -21,10 +21,10 @@ webhooks:
         path: "/validate"
       caBundle: ${CA_BUNDLE}
     rules:
-      - apiGroups: [""]
+      - apiGroups: ["apps"]
         apiVersions: ["v1"]
         operations: ["CREATE"]
-        resources: ["pods"]
+        resources: ["deployments"]
         scope: "Namespaced"
     failurePolicy: Fail
-    matchPolicy: Exact
+    matchPolicy: Equivalent

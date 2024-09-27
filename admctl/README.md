@@ -35,12 +35,19 @@ kubectl apply -f deployment.yaml -n devenv
 # Create ValidatingWebhookConfiguration with CA bundle
 CA_BUNDLE=$(cat certs/tls.crt | base64 | tr -d '\n')
 sed -e "s|caBundle:.*|caBundle: ${CA_BUNDLE}|" webhook-config.yaml | kubectl apply -f -
+
+# ClusterRole and ClusterRoleBinding
+kubectl apply -f clusterrole.yaml
+kubectl apply -f clusterrolebinding.yaml
 ```
 
 ## Build && Remove && Deploy
 ```
-docker build -t admission-controller:latest . && kubectl delete deployment.apps/admission-controller -n devenv && kubectl apply -f deployment.yaml -n devenv
+docker build -t admission-controller:latest . && kubectl delete deployment.apps/admission-controller -n devenv --ignore-not-found=true && kubectl apply -f deployment.yaml -n devenv
+
+docker build -t admission-controller:latest . && kubectl delete pod -l app=admission-controller -n devenv
 ```
+
 ## Test
 ```
 kubectl delete deployment nginx-deployment && kubectl create deployment nginx-deployment --image=nginx:latest --replicas=1

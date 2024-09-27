@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,16 +11,19 @@ import (
 	"path/filepath"
 
 	admission "k8s.io/api/admission/v1"
-	corev1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 var (
 	runtimeScheme = runtime.NewScheme()
 	codecs        = serializer.NewCodecFactory(runtimeScheme)
 	deserializer  = codecs.UniversalDeserializer()
+	clientset     *kubernetes.Clientset
 )
 
 const (
@@ -56,7 +60,7 @@ func (ac *admissionController) serve(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 	} else {
-		admissionResponse = ac.validate(&ar)
+		admissionResponse = ac.handle(&ar)
 	}
 
 	admissionReview := admission.AdmissionReview{}
@@ -73,20 +77,40 @@ func (ac *admissionController) serve(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Can't encode response: %v", err)
 		http.Error(w, fmt.Sprintf("could not encode response: %v", err), http.StatusInternalServerError)
+		return
+	} else {
+		log.Printf("Response: admissionReview: %v", admissionReview)
 	}
-	log.Printf("Ready to write response ...")
-	log.Printf("admissionReview: %v", admissionReview)
 	if _, err := w.Write(resp); err != nil {
 		log.Printf("Can't write response: %v", err)
 		http.Error(w, fmt.Sprintf("could not write response: %v", err), http.StatusInternalServerError)
 	}
 }
 
-func (ac *admissionController) validate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
+func (ac *admissionController) handle(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 	req := ar.Request
 
-	var pod corev1.Pod
-	if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
+	log.Printf("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v",
+		req.Kind, req.Namespace, req.Name, req.UID, req.Operation, req.UserInfo)
+
+	switch req.Operation {
+	case admission.Create:
+		return handleCreate(ar)
+	case admission.Delete:
+		return handleDelete(ar)
+	case admission.Update:
+		return handleUpdate(ar)
+	}
+
+	return &admission.AdmissionResponse{
+		Allowed: true,
+	}
+}
+
+func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
+	req := ar.Request
+	var deployment appsv1.Deployment
+	if err := json.Unmarshal(req.Object.Raw, &deployment); err != nil {
 		log.Printf("Could not unmarshal raw object: %v", err)
 		return &admission.AdmissionResponse{
 			Result: &metav1.Status{
@@ -95,22 +119,96 @@ func (ac *admissionController) validate(ar *admission.AdmissionReview) *admissio
 		}
 	}
 
-	log.Printf("AdmissionReview for Kind=%v, Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
-		req.Kind, req.Namespace, req.Name, pod.Name, req.UID, req.Operation, req.UserInfo)
+	log.Printf("Deployment labels: %v", deployment.Labels)
+	deploymentType := deployment.GetLabels()["devenv/type"]
+	log.Printf("deploymentType: %v", deploymentType)
 
-	if _, ok := pod.Labels[requiredLabel]; !ok {
-		return &admission.AdmissionResponse{
-			Allowed: false,
-			Result: &metav1.Status{
-				Message: fmt.Sprintf("Pod is missing required label: %s", requiredLabel),
-			},
-		}
-	}
-
+	getDeployments()
+	// if deploymentType == "feature" {
+	// 	featureName := deployment.GetLabels()["devenv/feature"]
+	// }
 	return &admission.AdmissionResponse{
 		Allowed: true,
 	}
 }
+
+func handleDelete(ar *admission.AdmissionReview) *admission.AdmissionResponse {
+	req := ar.Request
+	var deployment appsv1.Deployment
+	if err := json.Unmarshal(req.OldObject.Raw, &deployment); err != nil {
+		log.Printf("Could not unmarshal raw object: %v", err)
+		return &admission.AdmissionResponse{
+			Result: &metav1.Status{
+				Message: err.Error(),
+			},
+		}
+	}
+
+	log.Printf("Deployment labels: %v", deployment.Labels)
+	return &admission.AdmissionResponse{
+		Allowed: true,
+	}
+}
+
+func handleUpdate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
+	req := ar.Request
+	log.Printf("req.Kind: %v", req.Kind)
+	return &admission.AdmissionResponse{
+		Allowed: true,
+	}
+}
+
+func initK8Client() {
+	if clientset != nil {
+		return
+	}
+	// creates the in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	// creates the clientset
+	clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func getDeployments() {
+	initK8Client()
+	deployList, err := clientset.AppsV1().Deployments("default").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+	for _, deployment := range deployList.Items {
+		log.Printf("Deployment: %v", deployment.Name)
+	}
+}
+
+// func getPods() {
+// 	initK8Client()
+// 	// get pods in all the namespaces by omitting namespace
+// 	// Or specify namespace to get pods in particular namespace
+// 	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+// 	if err != nil {
+// 		panic(err.Error())
+// 	}
+// 	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+
+// 	// Examples for error handling:
+// 	// - Use helper functions e.g. errors.IsNotFound()
+// 	// - And/or cast to StatusError and use its properties like e.g. ErrStatus.Message
+// 	_, err = clientset.CoreV1().Pods("default").Get(context.TODO(), "example-xxxxx", metav1.GetOptions{})
+// 	if errors.IsNotFound(err) {
+// 		fmt.Printf("Pod example-xxxxx not found in default namespace\n")
+// 	} else if statusError, isStatus := err.(*errors.StatusError); isStatus {
+// 		fmt.Printf("Error getting pod %v\n", statusError.ErrStatus.Message)
+// 	} else if err != nil {
+// 		panic(err.Error())
+// 	} else {
+// 		fmt.Printf("Found example-xxxxx pod in default namespace\n")
+// 	}
+// }
 
 func main() {
 	ac := &admissionController{}
