@@ -12,8 +12,8 @@ spec:
   selector:
     app: hello-1
   ports:
-  - port: 8080
-    name: http
+    - port: 8080
+      name: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -22,6 +22,7 @@ metadata:
   labels:
     app: hello-1
     version: v1
+    "devenv/type": baseline
 spec:
   replicas: 1
   selector:
@@ -35,16 +36,16 @@ spec:
         version: v1
     spec:
       containers:
-      - name: hello-1
-        image: hello:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8080
-        env:
-        - name: MESSAGE
-          value: "hello-1"
-        - name: UPSTREAM_HOST
-          value: "hello-2:8080"
+        - name: hello-1
+          image: hello:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MESSAGE
+              value: "hello-1"
+            - name: UPSTREAM_HOST
+              value: "hello-2:8080"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -53,6 +54,8 @@ metadata:
   labels:
     app: hello-1
     version: v2
+    "devenv/type": feature
+    "devenv/feature": version2
 spec:
   replicas: 1
   selector:
@@ -66,16 +69,16 @@ spec:
         version: v2
     spec:
       containers:
-      - name: hello-1
-        image: hello:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8080
-        env:
-        - name: MESSAGE
-          value: "hello-1 from v2"
-        - name: UPSTREAM_HOST
-          value: "hello-2:8080"
+        - name: hello-1
+          image: hello:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MESSAGE
+              value: "hello-1 from v2"
+            - name: UPSTREAM_HOST
+              value: "hello-2:8080"
 ---
 ################################################################################
 # Hello 2
@@ -91,8 +94,8 @@ spec:
   selector:
     app: hello-2
   ports:
-  - port: 8080
-    name: http
+    - port: 8080
+      name: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -114,14 +117,14 @@ spec:
         version: v1
     spec:
       containers:
-      - name: hello-2
-        image: hello:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8080
-        env:
-        - name: MESSAGE
-          value: "hello-2"
+        - name: hello-2
+          image: hello:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MESSAGE
+              value: "hello-2"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -143,12 +146,12 @@ spec:
         version: v2
     spec:
       containers:
-      - name: hello-2
-        image: hello:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8080
-        env:
-        - name: MESSAGE
-          value: "hello-2 from v2"
+        - name: hello-2
+          image: hello:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MESSAGE
+              value: "hello-2 from v2"
 ---
