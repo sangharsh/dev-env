@@ -50,5 +50,5 @@ docker build -t admission-controller:latest . && kubectl delete pod -l app=admis
 
 ## Test
 ```
-kubectl delete deployment nginx-deployment && kubectl create deployment nginx-deployment --image=nginx:latest --replicas=1
+kubectl delete deployment nginx-deployment --ignore-not-found=true && kubectl create deployment nginx-deployment --image=nginx:latest --replicas=1
 ```
