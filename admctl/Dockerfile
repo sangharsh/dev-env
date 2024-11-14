@@ -14,7 +14,8 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o admission-controller .
+# RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o admission-controller .
+RUN go build -o admission-controller .
 
 # Final stage
 FROM alpine:3.20

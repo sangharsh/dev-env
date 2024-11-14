@@ -14,7 +14,7 @@ openssl x509 -in certs/tls.crt -text -noout
 ```
 # Build
 ```
-eval $(minikube docker-env -p admctl)
+eval $(minikube docker-env -p devenv)
 docker build -t admission-controller:latest .
 ```
 
