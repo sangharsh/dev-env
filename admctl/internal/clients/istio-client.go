@@ -1,4 +1,4 @@
-package main
+package clients
 
 import (
 	"context"
@@ -11,36 +11,29 @@ import (
 	istioclient "istio.io/client-go/pkg/clientset/versioned"
 )
 
-var (
-	istioClient *istioclient.Clientset
-)
+type IstioClient struct {
+	client *istioclient.Clientset
+}
 
-func initIstioClient() error {
-	if istioClient != nil {
-		return nil
-	}
+func NewIstioClient() (*IstioClient, error) {
 
 	// Get Istio client config from the admission controller's config
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return fmt.Errorf("failed to get cluster config: %v", err)
+		return nil, fmt.Errorf("failed to get cluster config: %v", err)
 	}
 
 	// Create Istio client
-	istioClient, err = istioclient.NewForConfig(config)
+	client, err := istioclient.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("failed to create istio client: %v", err)
+		return nil, fmt.Errorf("failed to create istio client: %v", err)
 	}
-	return nil
+	return &IstioClient{client}, nil
 }
 
-func getDestinationRules(namespace string) error {
-	err := initIstioClient()
-	if err != nil {
-		return err
-	}
+func (client *IstioClient) GetDestinationRules(namespace string) error {
 
-	destinationRules, err := istioClient.NetworkingV1().DestinationRules(namespace).List(context.TODO(), metav1.ListOptions{})
+	destinationRules, err := client.client.NetworkingV1().DestinationRules(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to list destination rules: %v", err)
 	}
@@ -50,16 +43,11 @@ func getDestinationRules(namespace string) error {
 	}
 	return nil
 }
-func getVirtualServices(namespace string) error {
-	// Get Istio client config from the admission controller's config
-	err := initIstioClient()
-	if err != nil {
-		return err
-	}
+func (client *IstioClient) GetVirtualServices(namespace string) error {
 
 	// List VirtualServices in the specified namespace
 	// Use "" for namespace to list across all namespaces
-	virtualServices, err := istioClient.NetworkingV1beta1().VirtualServices(namespace).List(context.TODO(), metav1.ListOptions{})
+	virtualServices, err := client.client.NetworkingV1beta1().VirtualServices(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to list virtual services: %v", err)
 	}

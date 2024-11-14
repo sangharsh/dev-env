@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/sangharsh/dev-env/admctl/internal/handlers"
 )
 
 const (
@@ -13,13 +15,13 @@ const (
 )
 
 func main() {
-	ac := &admissionController{}
+	ac := &handlers.AdmissionController{}
 
 	certPath := filepath.Join(tlsDir, tlsCertFile)
 	keyPath := filepath.Join(tlsDir, tlsKeyFile)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/validate", ac.serve)
+	mux.HandleFunc("/validate", ac.Serve)
 
 	server := &http.Server{
 		Addr:    ":8443",
@@ -30,7 +32,8 @@ func main() {
 	log.Printf("Using TLS certificate: %s", certPath)
 	log.Printf("Using TLS key: %s", keyPath)
 
-	if err := server.ListenAndServeTLS(certPath, keyPath); err != nil {
+	err := server.ListenAndServeTLS(certPath, keyPath)
+	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
