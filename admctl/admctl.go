@@ -46,10 +46,19 @@ func (ac *admissionController) serve(w http.ResponseWriter, r *http.Request) {
 				Message: err.Error(),
 			},
 		}
+	} else if *ar.Request.DryRun {
+		admissionResponse = &admission.AdmissionResponse{
+			Allowed: true,
+		}
 	} else {
 		admissionResponse = ac.handle(&ar)
 	}
 
+	admissionReview := prepareResponse(ar, admissionResponse)
+	sendResponse(w, admissionReview)
+}
+
+func prepareResponse(ar admission.AdmissionReview, admissionResponse *admission.AdmissionResponse) admission.AdmissionReview {
 	admissionReview := admission.AdmissionReview{}
 	if admissionResponse != nil {
 		admissionReview.Response = admissionResponse
@@ -59,7 +68,10 @@ func (ac *admissionController) serve(w http.ResponseWriter, r *http.Request) {
 		admissionReview.APIVersion = ar.APIVersion
 		admissionReview.Kind = ar.Kind
 	}
+	return admissionReview
+}
 
+func sendResponse(w http.ResponseWriter, admissionReview admission.AdmissionReview) {
 	resp, err := json.Marshal(admissionReview)
 	if err != nil {
 		log.Printf("Can't encode response: %v", err)
