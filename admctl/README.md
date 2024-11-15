@@ -52,3 +52,10 @@ docker build -t admission-controller:latest . && kubectl delete pod -l app=admis
 ```
 kubectl delete deployment nginx-deployment --ignore-not-found=true && kubectl create deployment nginx-deployment --image=nginx:latest --replicas=1
 ```
+
+# Clear disk usage
+```
+eval $(minikube docker-env -p devenv)
+docker system df
+docker system prune
+```
