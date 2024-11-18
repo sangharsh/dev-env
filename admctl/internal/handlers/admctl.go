@@ -57,6 +57,11 @@ func (ac *AdmissionController) handle(ar *admission.AdmissionReview) *admission.
 }
 
 func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
+	// Check whether deployment is baseline or feature
+	// - whether to check version already exists?
+	// Fetch VS
+	// - Get labels.app from deployment
+	// - Match with VS -> metadata.name
 	req := ar.Request
 	var deployment appsv1.Deployment
 	if err := json.Unmarshal(req.Object.Raw, &deployment); err != nil {
@@ -69,22 +74,32 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 	}
 
 	log.Printf("Deployment labels: %v", deployment.Labels)
-	deploymentType := deployment.GetLabels()["devenv/type"]
-	log.Printf("deploymentType: %v", deploymentType)
+	deploymentVersion := deployment.GetLabels()["devenv/version"]
+	log.Printf("deploymentVersion: %v", deploymentVersion)
+
+	k8sclient, err := clients.NewK8Client()
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	service, err := k8sclient.FindServiceForDeployment(&deployment)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
 
 	istioClient, err := clients.NewIstioClient()
-	// getDeployments()
-	err = istioClient.GetVirtualServices("default")
 	if err != nil {
-		log.Printf("error get VS: %v", err)
+		log.Printf("error: %v", err)
 	}
-	err = istioClient.GetDestinationRules("default")
+	dr, err := istioClient.FindDestinationRuleForService(service)
 	if err != nil {
-		log.Printf("error get DR: %v", err)
+		log.Printf("error: %v", err)
 	}
-	// if deploymentType == "feature" {
-	// 	featureName := deployment.GetLabels()["devenv/feature"]
-	// }
+	log.Printf("dr: %v", dr)
+	vs, err := istioClient.FindVirtualServiceForService(service)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	log.Printf("vs: %v", vs)
 	return &admission.AdmissionResponse{
 		Allowed: true,
 	}

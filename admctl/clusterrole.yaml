@@ -4,7 +4,7 @@ metadata:
   name: devenv-control-role
 rules:
   - apiGroups: [""]
-    resources: ["pods"]
+    resources: ["namespace", "services"]
     verbs: ["get", "watch", "list"]
   - apiGroups: ["apps"]
     resources: ["deployments"]
