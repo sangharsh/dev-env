@@ -2,13 +2,16 @@ package clients
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 
+	apiv1alpha3 "istio.io/api/networking/v1alpha3"
 	istionetworking "istio.io/client-go/pkg/apis/networking/v1beta1"
 	istioclient "istio.io/client-go/pkg/clientset/versioned"
 )
@@ -126,4 +129,46 @@ func generatePossibleHosts(service *corev1.Service) []string {
 		fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace), // FQDN
 	}
 	return hosts
+}
+
+func (c *IstioClient) AddSubsetToDestinationRule(
+	dr *istionetworking.DestinationRule,
+	version string,
+) (*istionetworking.DestinationRule, error) {
+	// Create the new subset
+	newSubset := &apiv1alpha3.Subset{
+		Name: version,
+		Labels: map[string]string{
+			"version": version,
+		},
+	}
+
+	patchObj := []map[string]interface{}{
+		{
+			"op":    "add",
+			"path":  "/spec/subsets/0",
+			"value": newSubset,
+		},
+	}
+
+	// Convert patch to JSON
+	patchBytes, err := json.Marshal(patchObj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal patch: %v", err)
+	}
+
+	// Apply the patch
+	updatedDR, err := c.client.NetworkingV1beta1().DestinationRules(dr.Namespace).Patch(
+		context.TODO(),
+		dr.Name,
+		types.JSONPatchType,
+		patchBytes,
+		metav1.PatchOptions{},
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to patch destination rule: %v", err)
+	}
+	log.Printf("updated dr: %v", updatedDR)
+	return updatedDR, nil
 }

@@ -100,6 +100,11 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 		log.Printf("error: %v", err)
 	}
 	log.Printf("vs: %v", vs)
+	updatedDR, err := istioClient.AddSubsetToDestinationRule(dr, deploymentVersion)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	log.Printf("updated dr: %v", updatedDR)
 	return &admission.AdmissionResponse{
 		Allowed: true,
 	}
