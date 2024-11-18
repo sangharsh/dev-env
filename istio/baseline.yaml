@@ -1,5 +1,5 @@
 --- # Gateway
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: hello-gateway
@@ -62,7 +62,7 @@ spec:
     - port: 8080
       name: http
 --- # Hello 1 DR
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: hello-1
@@ -73,7 +73,7 @@ spec:
       labels:
         version: baseline
 --- # Hello 1 VS
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: hello-1
@@ -132,7 +132,7 @@ spec:
     - port: 8080
       name: http
 --- # Hello 2 DR
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: hello-2
@@ -143,7 +143,7 @@ spec:
       labels:
         version: baseline
 --- # Hello 2 VS
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: hello-2
