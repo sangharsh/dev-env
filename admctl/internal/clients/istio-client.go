@@ -117,9 +117,43 @@ func (client *IstioClient) FindVirtualServiceForService(
 				}
 			}
 		}
+		if matchGatewayVirtualService(vs, possibleHosts) {
+			return vs, nil
+		}
 	}
 
 	return nil, fmt.Errorf("no virtual service found for service %s/%s", service.Namespace, service.Name)
+}
+
+func matchGatewayVirtualService(vs *istionetworking.VirtualService, possibleHosts []string) bool {
+	isGatewayVS := false
+	for _, vsHost := range vs.Spec.Hosts {
+		if vsHost == "*" {
+			isGatewayVS = true
+			break
+		}
+	}
+	if !isGatewayVS {
+		return false
+	}
+
+	for _, httpRoute := range vs.Spec.Http {
+		if len(httpRoute.Match) != 0 {
+			continue
+		}
+		for _, hRD := range httpRoute.Route { // HTTPRouteDestination
+			if hRD.Destination.Subset != "baseline" {
+				continue
+			}
+			for _, host := range possibleHosts {
+				if hRD.Destination.Host == host {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 // generatePossibleHosts generates all possible host variations for a service
