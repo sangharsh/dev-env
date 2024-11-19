@@ -11,7 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 
+	// TODO: Consolidate packages
 	apiv1alpha3 "istio.io/api/networking/v1alpha3"
+	networkingv1beta1 "istio.io/api/networking/v1beta1"
 	istionetworking "istio.io/client-go/pkg/apis/networking/v1beta1"
 	istioclient "istio.io/client-go/pkg/clientset/versioned"
 )
@@ -171,4 +173,71 @@ func (c *IstioClient) AddSubsetToDestinationRule(
 	}
 	log.Printf("updated dr: %v", updatedDR)
 	return updatedDR, nil
+}
+
+func (c *IstioClient) UpdateVirtualService(
+	vs *istionetworking.VirtualService,
+	host string,
+	version string,
+) (*istionetworking.VirtualService, error) {
+	patch := createHTTPRoute(host, version)
+	patchObj := []map[string]interface{}{
+		{
+			"op":    "add",
+			"path":  "/spec/http/0",
+			"value": patch,
+		},
+	}
+
+	// Convert patch to JSON
+	patchBytes, err := json.Marshal(patchObj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal patch: %v", err)
+	}
+
+	// Apply the patch
+	updatedVS, err := c.client.NetworkingV1beta1().VirtualServices(vs.Namespace).Patch(
+		context.TODO(),
+		vs.Name,
+		types.JSONPatchType,
+		patchBytes,
+		metav1.PatchOptions{},
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to patch destination rule: %v", err)
+	}
+	log.Printf("updated vs: %v", updatedVS)
+	return updatedVS, nil
+}
+
+func createHTTPRoute(app string, version string) *networkingv1beta1.HTTPRoute {
+	regexStr := fmt.Sprintf(".*%s:%s.*", app, version)
+	// Create a basic HTTP route
+	route := &networkingv1beta1.HTTPRoute{
+		// Match conditions
+		Match: []*networkingv1beta1.HTTPMatchRequest{
+			{
+				Headers: map[string]*networkingv1beta1.StringMatch{
+					"baggage": {
+						MatchType: &networkingv1beta1.StringMatch_Regex{
+							Regex: regexStr,
+						},
+					},
+				},
+			},
+		},
+
+		// Route destinations
+		Route: []*networkingv1beta1.HTTPRouteDestination{
+			{
+				Destination: &networkingv1beta1.Destination{
+					Host:   app,
+					Subset: version,
+				},
+			},
+		},
+	}
+
+	return route
 }

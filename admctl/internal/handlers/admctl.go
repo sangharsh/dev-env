@@ -95,6 +95,7 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 		log.Printf("error: %v", err)
 	}
 	log.Printf("dr: %v", dr)
+	// TODO: VS is not found if VS.spec.hosts is - '*', e.g. hello-1 VS
 	vs, err := istioClient.FindVirtualServiceForService(service)
 	if err != nil {
 		log.Printf("error: %v", err)
@@ -105,6 +106,12 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 		log.Printf("error: %v", err)
 	}
 	log.Printf("updated dr: %v", updatedDR)
+	// TODO: Handle duplicate entries in VS http route
+	updatedVS, err := istioClient.UpdateVirtualService(vs, service.Name, version)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	log.Printf("updated vs: %v", updatedVS)
 	return &admission.AdmissionResponse{
 		Allowed: true,
 	}
