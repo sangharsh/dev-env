@@ -74,8 +74,8 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 	}
 
 	log.Printf("Deployment labels: %v", deployment.Labels)
-	deploymentVersion := deployment.GetLabels()["devenv/version"]
-	log.Printf("deploymentVersion: %v", deploymentVersion)
+	version := deployment.GetLabels()["devenv/version"]
+	log.Printf("version: %v", version)
 
 	k8sclient, err := clients.NewK8Client()
 	if err != nil {
@@ -101,7 +101,7 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 		log.Printf("error: %v", err)
 	}
 	log.Printf("vs: %v", vs)
-	updatedDR, err := istioClient.AddSubsetToDestinationRule(dr, deploymentVersion)
+	updatedDR, err := istioClient.AddSubsetToDestinationRule(dr, version)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
