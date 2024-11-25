@@ -91,3 +91,45 @@ kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.item
 ```
 minikube delete -p minikube
 ```
+
+## Envoy filter
+Create
+```
+kubectl delete envoyfilter split-proto-header --ignore-not-found=true && kubectl apply -f ../istio/split-proto-header.yaml
+```
+
+Request/Response:
+```
+curl  -H "x-proto-data:ChUKBXVzZXJzEgwxMC4wLjAuNDI6ODAKFQoFb3JkZXISDDEwLjAuMC40Mzo4MAoNCgdoZWxsby0xEgJ2MQ==" ${GATEWAY_URL}/hello
+
+{"msg":"hello-1","response":{"host":"hello-2:8080","data":{"msg":"hello-2"}}}
+```
+Istio proxy:
+```
+kubectl logs --tail=1 -f "$(kubectl get pod -l app=hello-1,version=baseline -o jsonpath='{.items[0].metadata.name}')" -c istio-proxy
+```
+Logs:
+```
+2024-11-25T06:28:42.898202Z     info    envoy lua external/envoy/source/extensions/filters/http/lua/lua_filter.cc:941   script log: decoded_base64:
+
+users
+     10.0.0.42:80
+
+order
+     10.0.0.43:80
+
+hello-1v1       thread=22
+2024-11-25T06:28:42.898505Z     info    envoy lua external/envoy/source/extensions/filters/http/lua/lua_filter.cc:941   script log: overrides: hello-1: v1, order: 10.0.0.43:80, users: 10.0.0.42:80,         thread=22
+2024-11-25T06:28:42.898517Z     info    envoy lua external/envoy/source/extensions/filters/http/lua/lua_filter.cc:941   script log: hello-1: v1 thread=22
+2024-11-25T06:28:42.898527Z     info    envoy lua external/envoy/source/extensions/filters/http/lua/lua_filter.cc:941   script log: order: 10.0.0.43:80 thread=22
+2024-11-25T06:28:42.898530Z     info    envoy lua external/envoy/source/extensions/filters/http/lua/lua_filter.cc:941   script log: users: 10.0.0.42:80 thread=22
+2024-11-25T06:28:42.898532Z     debug   envoy lua external/envoy/source/extensions/filters/common/lua/lua.cc:39 coroutine finished      thread=22
+```
+
+App logs:
+```
+kubectl logs -f "$(kubectl get pod -l app=hello-1,version=baseline -o jsonpath='{.items[0].metadata.name}')"
+```
+```
+2024/11/25 06:28:42 handleHello headers: map[Accept:[*/*] User-Agent:[curl/8.5.0] X-Envoy-Attempt-Count:[1] X-Envoy-Internal:[true] X-Forwarded-Client-Cert:[By=spiffe://cluster.local/ns/default/sa/default;Hash=45cb4d9e1878bc19f8f84d5cc7b6aae0452df903d45bc6a00815f230a5dcec71;Subject="";URI=spiffe://cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account] X-Forwarded-For:[10.244.0.1] X-Forwarded-Proto:[http] X-Hello-1:[v1] X-Order:[10.0.0.43:80] X-Proto-Data:[ChUKBXVzZXJzEgwxMC4wLjAuNDI6ODAKFQoFb3JkZXISDDEwLjAuMC40Mzo4MAoNCgdoZWxsby0xEgJ2MQ==] X-Request-Id:[10726c1a-b106-4d12-aa2b-aa29b4bdad02] X-Users:[10.0.0.42:80]]
+```
