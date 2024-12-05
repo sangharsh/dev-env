@@ -94,12 +94,12 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
-	log.Printf("dr: %v", dr)
+	log.Printf("dr: %s", dr.Name)
 	vs, err := istioClient.FindVirtualServiceForService(service)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
-	log.Printf("vs: %v", vs)
+	log.Printf("vs: %s", vs.Name)
 	if dr == nil || vs == nil {
 		log.Printf("dr or vs is nil. skipping update")
 		return &admission.AdmissionResponse{
@@ -108,15 +108,17 @@ func handleCreate(ar *admission.AdmissionReview) *admission.AdmissionResponse {
 	}
 	updatedDR, err := istioClient.AddSubsetToDestinationRule(dr, version)
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("error update dr: %s. error: %v", dr.Name, err)
+	} else {
+		log.Printf("dr updated: %s", updatedDR.Name)
 	}
-	log.Printf("updated dr: %v", updatedDR)
 	// TODO: Handle duplicate entries in VS http route
 	updatedVS, err := istioClient.UpdateVirtualService(vs, service.Name, version)
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("error updating vs %s. error: %v", vs.Name, err)
+	} else {
+		log.Printf("vs updated: %s", updatedVS.Name)
 	}
-	log.Printf("updated vs: %v", updatedVS)
 	return &admission.AdmissionResponse{
 		Allowed: true,
 	}

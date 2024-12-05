@@ -205,7 +205,6 @@ func (c *IstioClient) AddSubsetToDestinationRule(
 	if err != nil {
 		return nil, fmt.Errorf("failed to patch destination rule: %v", err)
 	}
-	log.Printf("updated dr: %v", updatedDR)
 	return updatedDR, nil
 }
 
@@ -241,7 +240,6 @@ func (c *IstioClient) UpdateVirtualService(
 	if err != nil {
 		return nil, fmt.Errorf("failed to patch destination rule: %v", err)
 	}
-	log.Printf("updated vs: %v", updatedVS)
 	return updatedVS, nil
 }
 
