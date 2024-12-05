@@ -13,7 +13,7 @@ Deploy app and setup istio to route request to app version based on header
 ### Kubernetes cluster
 
 ```
-minikube start -p devenv
+minikube start --memory=4096 -p devenv
 // Run in a separate window
 // Assigns an external IP for LoadBalancer services
 minikube tunnel -p devenv
@@ -36,50 +36,38 @@ docker build -t hello:latest -f hello/Dockerfile hello/
 ### Deploy
 
 ```
-kubectl apply -f istio/deployments.yaml
+kubectl apply -f istio/baseline.yaml
 // Access from within a pod
 kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.name}')" -c hello-2 -- wget -q -O- hello-1:8080/hello | jq
 ```
 
-### Networking
-
-```
-kubectl apply -f istio/gateway.yaml
-```
+### Access the app
 
 Get Gateway URL
 
 ```
-source ../istio/set_gateway_url.sh
+source istio/set_gateway_url.sh
 echo $GATEWAY_URL
 ```
 
-### Access the app
-
 Send a request to apps via ingress gateway
 ```
-curl -sS -H 'X-Hello-1:v2' -H 'X-Hello-2:v2' ${GATEWAY_URL}/hello | jq
-```
-Test all combinations
-```
-for h1 in baseline v2; do for h2 in baseline v2; do \
-curl -sS -H "baggage: overrides=hello-1:${h1}hello-2:${h2}" ${GATEWAY_URL}/hello; \
-done; done
+curl -sS ${GATEWAY_URL}/hello | jq
 ```
 
-### Telemetry
+### Logs
 
 Logs from app container
 
 ```
-kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.items[0].metadata.name}')" -c hello-2
+kubectl logs -f "$(kubectl get pod -l app=hello-2,version=baseline -o jsonpath='{.items[0].metadata.name}')" -c hello-2
 ```
 
 Access logs from envoy sidecar
 
 ```
 kubectl apply -f istio/telemetry.yaml
-kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.items[0].metadata.name}')" -c istio-proxy
+kubectl logs -f "$(kubectl get pod -l app=hello-2,version=baseline -o jsonpath='{.items[0].metadata.name}')" -c istio-proxy
 ```
 
 ## Clean up
