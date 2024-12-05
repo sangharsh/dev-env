@@ -42,7 +42,7 @@ kubectl apply -f clusterrole.yaml
 kubectl apply -f clusterrolebinding.yaml
 ```
 
-## Build && Remove && Deploy
+## Redeploy
 ```
 docker build -t devenv-mesh-controller:latest . && kubectl delete deployment.apps/devenv-mesh-controller -n devenv --ignore-not-found=true && kubectl apply -f deployment.yaml -n devenv
 
