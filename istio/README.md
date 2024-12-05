@@ -13,10 +13,10 @@ Deploy app and setup istio to route request to app version based on header
 ### Kubernetes cluster
 
 ```
-minikube start -p minikube
+minikube start -p devenv
 // Run in a separate window
 // Assigns an external IP for LoadBalancer services
-minikube tunnel -p minikube
+minikube tunnel -p devenv
 ```
 
 ### Service mesh
@@ -29,7 +29,7 @@ kubectl label namespace default istio-injection=enabled
 ### Container image
 
 ```
-eval $(minikube docker-env -p minikube)
+eval $(minikube docker-env -p devenv)
 docker build -t hello:latest -f hello/Dockerfile hello/
 ```
 
@@ -85,5 +85,5 @@ kubectl logs -f "$(kubectl get pod -l app=hello-2,version=v1 -o jsonpath='{.item
 ## Clean up
 
 ```
-minikube delete -p minikube
+minikube delete -p devenv
 ```
