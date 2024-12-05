@@ -1,5 +1,6 @@
 # Prepare certs for TLS
 ```
+mkdir certs
 # Generate a private key (tls.key):
 openssl genrsa -out certs/tls.key 2048
 
