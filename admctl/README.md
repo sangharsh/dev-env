@@ -54,6 +54,17 @@ docker build -t devenv-mesh-controller:latest . && kubectl delete pod -l app=dev
 kubectl delete deployment nginx-deployment --ignore-not-found=true && kubectl create deployment nginx-deployment --image=nginx:latest --replicas=1
 ```
 
+# Deploy v2 apps
+```
+kubectl delete deployment hello-1-v2 --ignore-not-found=true && kubectl apply -f ../istio/hello-1-v2.yaml
+kubectl delete deployment hello-2-v2 --ignore-not-found=true && kubectl apply -f ../istio/hello-2-v2.yaml
+```
+
+## Test
+```
+for h1 in baseline v2; do for h2 in baseline v2; do curl -sS -H "baggage: overrides=hello-1:${h1}hello-2:${h2}" ${GATEWAY_URL}/hello; done; done
+```
+
 # Clear disk usage
 ```
 eval $(minikube docker-env -p devenv)
