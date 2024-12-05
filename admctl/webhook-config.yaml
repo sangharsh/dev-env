@@ -1,9 +1,9 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: pod-label-validator
+  name: devnev-mesh-controller
 webhooks:
-  - name: pod-label.validator.example.com
+  - name: mesh-controller.devenv.io
     sideEffects: NoneOnDryRun
     namespaceSelector:
       matchExpressions:
@@ -16,7 +16,7 @@ webhooks:
     admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
       service:
-        name: admission-controller
+        name: devenv-mesh-controller
         namespace: devenv
         path: "/validate"
       caBundle: ${CA_BUNDLE}

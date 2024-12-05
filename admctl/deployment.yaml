@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: admission-controller
+  name: devenv-mesh-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: admission-controller
+      app: devenv-mesh-controller
   template:
     metadata:
       labels:
-        app: admission-controller
+        app: devenv-mesh-controller
     spec:
       containers:
-      - name: admission-controller
-        image: admission-controller:latest
+      - name: devenv-mesh-controller
+        image: devenv-mesh-controller:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 8443
@@ -25,16 +25,16 @@ spec:
       volumes:
       - name: webhook-certs
         secret:
-          secretName: admission-controller-tls
+          secretName: devenv-mesh-controller-tls
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: admission-controller
+  name: devenv-mesh-controller
   namespace: devenv
 spec:
   selector:
-    app: admission-controller
+    app: devenv-mesh-controller
   ports:
     - port: 443
       targetPort: 8443

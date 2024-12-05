@@ -14,8 +14,8 @@ RUN go mod download
 COPY . .
 
 # Build the application
-# RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o admission-controller .
-RUN go build -o admission-controller .
+# RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o devenv-mesh-controller .
+RUN go build -o devenv-mesh-controller .
 
 # Final stage
 FROM alpine:3.20
@@ -27,7 +27,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Copy the binary from the builder stage
-COPY --from=builder /app/admission-controller .
+COPY --from=builder /app/devenv-mesh-controller .
 
 # Create a directory for the TLS certificates
 RUN mkdir -p /etc/webhook/certs
@@ -36,4 +36,4 @@ RUN mkdir -p /etc/webhook/certs
 EXPOSE 8443
 
 # Run the binary
-CMD ["./admission-controller"]
+CMD ["./devenv-mesh-controller"]
