@@ -29,8 +29,7 @@ kubectl label namespace default istio-injection=enabled
 ### Container image
 
 ```
-eval $(minikube docker-env -p devenv)
-docker build -t hello:latest -f hello/Dockerfile hello/
+eval $(minikube docker-env -p devenv) && docker build -t hello:latest -f hello/Dockerfile hello/
 ```
 
 ### Deploy

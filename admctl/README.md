@@ -15,8 +15,7 @@ openssl x509 -in certs/tls.crt -text -noout
 ```
 # Build
 ```
-eval $(minikube docker-env -p devenv)
-docker build -t devenv-mesh-controller:latest .
+eval $(minikube docker-env -p devenv) && docker build -t devenv-mesh-controller:latest .
 ```
 
 # Kubernetes setup
@@ -44,9 +43,9 @@ kubectl apply -f clusterrolebinding.yaml
 
 ## Redeploy
 ```
-docker build -t devenv-mesh-controller:latest . && kubectl delete deployment.apps/devenv-mesh-controller -n devenv --ignore-not-found=true && kubectl apply -f deployment.yaml -n devenv
+eval $(minikube docker-env -p devenv) && docker build -t devenv-mesh-controller:latest . && kubectl delete deployment.apps/devenv-mesh-controller -n devenv --ignore-not-found=true && kubectl apply -f deployment.yaml -n devenv
 
-docker build -t devenv-mesh-controller:latest . && kubectl delete pod -l app=devenv-mesh-controller -n devenv
+eval $(minikube docker-env -p devenv) && docker build -t devenv-mesh-controller:latest . && kubectl delete pod -l app=devenv-mesh-controller -n devenv
 ```
 
 ## Test
