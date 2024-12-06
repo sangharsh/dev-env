@@ -1,0 +1,30 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: devnev-mesh-controller
+webhooks:
+  - name: mesh-controller.devenv.io
+    sideEffects: NoneOnDryRun
+    namespaceSelector:
+      matchExpressions:
+        - key: runlevel
+          operator: NotIn
+          values: ["0", "1"]
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: ["devenv"]
+    admissionReviewVersions: ["v1", "v1beta1"]
+    clientConfig:
+      service:
+        name: devenv-mesh-controller
+        namespace: devenv
+        path: "/validate"
+      caBundle: ${CA_BUNDLE}
+    rules:
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["deployments"]
+        scope: "Namespaced"
+    failurePolicy: Fail
+    matchPolicy: Equivalent

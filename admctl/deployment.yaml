@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devenv-mesh-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devenv-mesh-controller
+  template:
+    metadata:
+      labels:
+        app: devenv-mesh-controller
+    spec:
+      containers:
+      - name: devenv-mesh-controller
+        image: devenv-mesh-controller:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - name: webhook-certs
+          mountPath: /etc/webhook/certs
+          readOnly: true
+      volumes:
+      - name: webhook-certs
+        secret:
+          secretName: devenv-mesh-controller-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devenv-mesh-controller
+  namespace: devenv
+spec:
+  selector:
+    app: devenv-mesh-controller
+  ports:
+    - port: 443
+      targetPort: 8443
