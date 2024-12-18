@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+/* container for override metadata */
+message Overrides {
+
+  // maps app_name -> version
+  map<string, string> routing_overrides = 1;
+}
