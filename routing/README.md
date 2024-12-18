@@ -4,7 +4,7 @@ Request routing information is sent under `overrides` key under [baggage](https:
 > This specification defines a standard for representing and propagating a set of application-defined properties associated with a distributed request or workflow execution.
 
 
-Value under `overrides` is base-64 encoded protocol buffer message. TODO: Add proto
+Value under `overrides` is base-64 encoded protocol buffer message.
 
 Two `envoyfilter` are created below to intercept request at gateway entry and outbound from sidecar. Envoy filter decodes value under `overrides` and for each key, value in protobuf message, it injects a request header with name (x-`key`) and value (`value`)
 
@@ -31,3 +31,6 @@ All 4 combinations are expected in response
 {"msg":"hello-1 from v2","response":{"host":"hello-2:8080","data":{"msg":"hello-2"}}}
 {"msg":"hello-1 from v2","response":{"host":"hello-2:8080","data":{"msg":"hello-2 from v2"}}}
 ```
+
+# TODO
+1. Add test cases for lua
