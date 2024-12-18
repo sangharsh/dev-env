@@ -13,9 +13,9 @@ TODO: Ideal design was to intercept request on sidecar_inbound but injecting hea
 ## Create envoyfilter
 
 ```
-export LUA_UTILS_CODE=`cat istio/utils.lua`
-kubectl delete envoyfilter decode-header-sidecar --ignore-not-found=true && cat istio/decode-header-sidecar.yaml | envsubst | kubectl apply -f -
-kubectl delete envoyfilter decode-header-gateway -n istio-system --ignore-not-found=true && cat istio/decode-header-gateway.yaml | envsubst | kubectl apply -f -
+export LUA_UTILS_CODE=`cat routing/utils.lua`
+kubectl delete envoyfilter decode-header-sidecar --ignore-not-found=true && cat routing/decode-header-sidecar.yaml | envsubst | kubectl apply -f -
+kubectl delete envoyfilter decode-header-gateway -n istio-system --ignore-not-found=true && cat routing/decode-header-gateway.yaml | envsubst | kubectl apply -f -
 ```
 
 ## Test
@@ -26,10 +26,10 @@ for h1 in x y; do for h2 in x y; do curl -sS -H "baggage: overrides=Cg0KB2hlbGxv
 Response:
 All 4 combinations are expected in response
 ```
-{"msg":"hello-1","response":{"host":"hello-2:8080","data":{"msg":"hello-2"}}}
-{"msg":"hello-1","response":{"host":"hello-2:8080","data":{"msg":"hello-2 from v2"}}}
-{"msg":"hello-1 from v2","response":{"host":"hello-2:8080","data":{"msg":"hello-2"}}}
-{"msg":"hello-1 from v2","response":{"host":"hello-2:8080","data":{"msg":"hello-2 from v2"}}}
+{"msg":"hello-1","response":{"data":{"msg":"hello-2"}}}
+{"msg":"hello-1","response":{"data":{"msg":"hello-2 from v2"}}}
+{"msg":"hello-1 from v2","response":{"data":{"msg":"hello-2"}}}
+{"msg":"hello-1 from v2","response":{"data":{"msg":"hello-2 from v2"}}}
 ```
 
 # TODO

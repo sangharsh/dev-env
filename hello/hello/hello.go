@@ -16,15 +16,12 @@ type Response struct {
 }
 
 type UpstreamResponseData struct {
-	Host          string      `json:"host"`
 	Data          interface{} `json:"data,omitempty"`
 	UpstreamError string      `json:"error,omitempty"`
 }
 
 func helloUpstream(inRequest *http.Request, host string) *UpstreamResponseData {
-	upstreamResponse := &UpstreamResponseData{
-		Host: host,
-	}
+	upstreamResponse := &UpstreamResponseData{}
 	url := fmt.Sprintf("http://%s/hello", host)
 	responseJSON, err := utils.FetchJSONResponse(inRequest, url)
 	if err != nil {

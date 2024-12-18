@@ -64,12 +64,12 @@ kubectl delete deployment hello-2-v2 --ignore-not-found=true && kubectl apply -f
 curl -sS ${GATEWAY_URL}/hello
 ```
 
-> {"msg":"hello-1","response":{"host":"hello-2:8080","data":{"msg":"hello-2"}}}
+> {"msg":"hello-1","response":{"data":{"msg":"hello-2"}}}
 
 ```
 curl -sS -H "x-hello-1: v2" ${GATEWAY_URL}/hello
 ```
-> {"msg":"hello-1 from v2","response":{"host":"hello-2:8080","data":{"msg":"hello-2"}}}
+> {"msg":"hello-1 from v2","response":{"data":{"msg":"hello-2"}}}
 
 # Clear disk usage
 ```
