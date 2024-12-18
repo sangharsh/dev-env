@@ -244,16 +244,17 @@ func (c *IstioClient) UpdateVirtualService(
 }
 
 func createHTTPRoute(app string, version string) *networkingv1beta1.HTTPRoute {
-	regexStr := fmt.Sprintf(".*%s:%s.*", app, version)
+	headerKey := fmt.Sprintf("x-%s", app)
 	// Create a basic HTTP route
 	route := &networkingv1beta1.HTTPRoute{
 		// Match conditions
 		Match: []*networkingv1beta1.HTTPMatchRequest{
 			{
 				Headers: map[string]*networkingv1beta1.StringMatch{
-					"baggage": {
-						MatchType: &networkingv1beta1.StringMatch_Regex{
-							Regex: regexStr,
+					headerKey: {
+						MatchType: &networkingv1beta1.StringMatch_Exact{
+							Exact: version,
+
 						},
 					},
 				},
