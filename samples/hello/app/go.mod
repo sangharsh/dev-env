@@ -1,4 +1,4 @@
-module github.com/sangharsh/dev-env/hello
+module github.com/sangharsh/dev-env/samples/hello/app
 
 go 1.23
 

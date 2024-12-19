@@ -1,4 +1,4 @@
-package context_propagation
+package utils
 
 import (
 	"go.opentelemetry.io/otel"

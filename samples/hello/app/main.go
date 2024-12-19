@@ -9,8 +9,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/sangharsh/dev-env/hello/context_propagation"
-	"github.com/sangharsh/dev-env/hello/hello"
+	"github.com/sangharsh/dev-env/samples/hello/app/handlers"
+	"github.com/sangharsh/dev-env/samples/hello/app/utils"
 )
 
 // Credits: https://opentelemetry.io/docs/languages/go/getting-started/#initialize-the-opentelemetry-sdk
@@ -26,7 +26,7 @@ func run() (err error) {
 	defer stop()
 
 	// Set up OpenTelemetry.
-	context_propagation.SetupOTelSDK()
+	utils.SetupOTelSDK()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -63,6 +63,6 @@ func run() (err error) {
 
 func createHTTPHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/hello", hello.HandleHello)
+	mux.HandleFunc("/hello", handlers.HandleHello)
 	return mux
 }

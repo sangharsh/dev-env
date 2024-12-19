@@ -29,13 +29,13 @@ kubectl label namespace default istio-injection=enabled
 ### Container image
 
 ```
-eval $(minikube docker-env -p devenv) && docker build -t hello:latest -f hello/Dockerfile hello/
+eval $(minikube docker-env -p devenv) && docker build -t hello:latest -f samples/hello/app/Dockerfile samples/hello/app/
 ```
 
 ### Deploy
 
 ```
-kubectl apply -f istio/baseline.yaml
+kubectl apply -f samples/hello/baseline.yaml
 // Access from within a pod
 kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.name}')" -c hello-2 -- wget -q -O- hello-1:8080/hello | jq
 ```
@@ -45,7 +45,7 @@ kubectl exec "$(kubectl get pod -l app=hello-2 -o jsonpath='{.items[0].metadata.
 Get Gateway URL
 
 ```
-source istio/set_gateway_url.sh
+source samples/hello/set_gateway_url.sh
 echo $GATEWAY_URL
 ```
 
@@ -65,7 +65,6 @@ kubectl logs -f "$(kubectl get pod -l app=hello-2,version=baseline -o jsonpath='
 Access logs from envoy sidecar
 
 ```
-kubectl apply -f istio/telemetry.yaml
 kubectl logs -f "$(kubectl get pod -l app=hello-2,version=baseline -o jsonpath='{.items[0].metadata.name}')" -c istio-proxy
 ```
 

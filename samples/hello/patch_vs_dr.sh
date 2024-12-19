@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Sample commands to patch vs and dr as needed by admission controller
+# Not in use
 kubectl patch virtualservice hello-1 --type json -p '
 [
   {

@@ -55,8 +55,8 @@ kubectl delete deployment nginx-deployment --ignore-not-found=true && kubectl cr
 
 # Deploy v2 apps
 ```
-kubectl delete deployment hello-1-v2 --ignore-not-found=true && kubectl apply -f istio/hello-1-v2.yaml
-kubectl delete deployment hello-2-v2 --ignore-not-found=true && kubectl apply -f istio/hello-2-v2.yaml
+kubectl delete deployment hello-1-v2 --ignore-not-found=true && kubectl apply -f samples/hello/hello-1-v2.yaml
+kubectl delete deployment hello-2-v2 --ignore-not-found=true && kubectl apply -f samples/hello/hello-2-v2.yaml
 ```
 
 ## Test

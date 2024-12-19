@@ -1,4 +1,4 @@
-package hello
+package handlers
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/sangharsh/dev-env/hello/utils"
+	"github.com/sangharsh/dev-env/samples/hello/app/utils"
 )
 
 type Response struct {

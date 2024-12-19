@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Sets variable GATEWAY_URL to access endpoints
+# Usage: source set_gateway_url.sh
 INGRESS_NAME=istio-ingressgateway
 INGRESS_NS=istio-system
 INGRESS_HOST=$(kubectl -n "$INGRESS_NS" get service "$INGRESS_NAME" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
