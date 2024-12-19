@@ -13,7 +13,8 @@ TODO: Ideal design was to intercept request on sidecar_inbound but injecting hea
 ## Create envoyfilter
 
 ```
-export LUA_UTILS_CODE=`cat routing/utils.lua`
+export LUA_CODE="|
+$(cat routing/filter.lua)"
 kubectl delete envoyfilter decode-header-sidecar --ignore-not-found=true && cat routing/decode-header-sidecar.yaml | envsubst | kubectl apply -f -
 kubectl delete envoyfilter decode-header-gateway -n istio-system --ignore-not-found=true && cat routing/decode-header-gateway.yaml | envsubst | kubectl apply -f -
 ```
