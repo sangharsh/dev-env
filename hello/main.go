@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net"
 	"net/http"
@@ -64,16 +63,6 @@ func run() (err error) {
 
 func createHTTPHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/statusz", handleStatusz)
 	mux.HandleFunc("/hello", hello.HandleHello)
 	return mux
-}
-
-func handleStatusz(w http.ResponseWriter, r *http.Request) {
-	response := map[string]string{
-		"message": "all ok",
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
 }
