@@ -6,15 +6,6 @@ import (
 )
 
 func SetupOTelSDK() {
-	// Set up propagator.
-	prop := newPropagator()
-	otel.SetTextMapPropagator(prop)
-}
-
-func newPropagator() propagation.TextMapPropagator {
-	return propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-		// CustomHeaderPropagator{},
-	)
+	// Set up to propagate `baggage` header
+	otel.SetTextMapPropagator(propagation.Baggage{})
 }

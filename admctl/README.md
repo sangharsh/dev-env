@@ -63,7 +63,6 @@ kubectl delete deployment hello-2-v2 --ignore-not-found=true && kubectl apply -f
 ```
 curl -sS ${GATEWAY_URL}/hello
 ```
-
 > {"msg":"hello-1","response":{"data":{"msg":"hello-2"}}}
 
 ```
