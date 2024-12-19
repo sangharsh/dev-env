@@ -20,7 +20,7 @@ kubectl delete envoyfilter decode-header-gateway -n istio-system --ignore-not-fo
 ```
 
 ## Test
-Request should now be routed to baseline and v2 versions of both apps i.e. hello-1, hello-2
+Request should now be routed to baseline and v2 versions of both apps i.e. hello-1, hello-2, based on `overrides` header.
 ```
 for h1 in x y; do for h2 in x y; do curl -sS -H "baggage: overrides=Cg0KB2hlbGxvLTESAnY${h1}Cg0KB2hlbGxvLTISAnY${h2}" ${GATEWAY_URL}/hello; done; done
 ```
