@@ -15,18 +15,21 @@ Enable multiple developers/teams to deploy their set of services integrated with
 1. Request with a specific header use services deployed with matching label if exists otherwise baseline service.
    1. Header should be forwarded in S2S (also async, infra?(MQ, DB, SQS) etc.) calls
 
-## Checkin
+## Status
 
 Done
 
-1. Hello service
-1. Routing via istio, header based
-1. Context propagation
-
-ToDo
-
-1. Context propagation should be supported by third party services as well. HTTP Baggage is intended for this.
-   1. Single header like "overrides"
-1. Network layer should be able to parse baggage to act on it. User should be able to create baggage to send request
-1. Add languages. Python, node, Java
-1. VM, infra pieces, async etc.
+- [x] HTTP service with a upstream HTTP call
+  - hello service in golang
+- [x] Context propagation
+  - Using baggage header and open-telemetry SDK
+- [x] Network routing based on request header
+  - [Routing](routing/README.md). Used Istio, EnvoyFilter, Lua
+- [x] Update network on deployments
+  - Using k8s admission controller. [admctl](admctl/README.md)
+- [ ] Ensure network config is consistent with deployments
+  - Use k8s operator pattern
+- [ ] Way to manage updates from modified service to baseline up/downstream services. Looks tricky, need to think deeper
+- [ ] Support HTTP service in other languages / stacks
+- [ ] Support async, message brokers etc.
+- [ ] Support non-k8s workloads
