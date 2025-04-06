@@ -1,13 +1,10 @@
-# Code in context
+# Better testing while developing
 
-## Objective
+Many times, we change and test microservices in local workstation without access to upstream/downstream services. Integration testing happens at a later point in time. Major reason for this is effort and maintanence required to manage dependent services.
 
-Currently tools seem to provide creating an isolated cluster of services with changes. While isolation is a good goal, cost lies on the other side.
-Existing tools in the space: Okteto, Telepresence
+[Lyft blog](https://eng.lyft.com/scaling-productivity-on-microservices-at-lyft-part-3-extending-our-envoy-mesh-with-staging-fdaafafca82f) discusses their evolution in this journey. This project draws many inspiration from part 3 of the blog. It tries to implement same functionality in a Kubernetes cluster, aiming to be useful to wider audience.
 
-Enable multiple developers/teams to deploy their set of services integrated with rest of baseline services. Send request through changed and baseline services.
-
-## Solution
+## Approach
 
 1. All baseline services are deployed in k8s cluster.
 1. Normal request make upstream calls as needed to baseline services using some sort of service mesh
@@ -26,10 +23,20 @@ Done
 - [x] Network routing based on request header
   - [Routing](routing/README.md). Used Istio, EnvoyFilter, Lua
 - [x] Update network on deployments
-  - Using k8s admission controller. [admctl](admctl/README.md)
+  - Using k8s admission controller hooked to deployments. [admctl](admctl/README.md)
 - [ ] Ensure network config is consistent with deployments
   - Use k8s operator pattern
 - [ ] Way to manage updates from modified service to baseline up/downstream services. Looks tricky, need to think deeper
 - [ ] Support HTTP service in other languages / stacks
 - [ ] Support async, message brokers etc.
 - [ ] Support non-k8s workloads
+
+## Related work
+
+Network routing
+1. Telepresence
+1. Mirrord
+1. Signadot
+
+In-sync deploy on cloud
+1. Okteto
